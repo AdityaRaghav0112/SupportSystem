@@ -1,4 +1,4 @@
-import { api } from "./api";
+import api from "./api"
 import { LoginPayload, LoginResponse } from "../types/auth";
 
 export const login = async (

@@ -7,7 +7,7 @@ import React, {
 import * as SecureStore from "expo-secure-store";
 
 import { login } from "../api/auth";
-import { api } from "../api/api";
+import api from "../api/api";
 import { User } from "../types/auth";
 
 interface AuthContextType {
