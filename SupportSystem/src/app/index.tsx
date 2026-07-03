@@ -7,23 +7,23 @@ import {
   StyleSheet,
   SafeAreaView,
 } from "react-native";
-import { login } from '../api/auth';
+import { useAuth } from "../context/AuthContext";
+import {router} from "expo-router";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const { loginUser } = useAuth();
+
   const handleLogin = async () => {
     try {
-      const response = await login({
-        email,
-        password,
-      });
+      await loginUser(email, password);
 
       console.log("Login Success");
-      console.log(response);
+      router.replace("/dashboard");
     } catch (error: any) {
-      console.log(error.response?.data);
+      console.log(error);
     }
   };
 

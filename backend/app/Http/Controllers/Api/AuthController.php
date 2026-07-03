@@ -7,8 +7,19 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-class AuthController extends Controller
-{
+class AuthController extends Controller{
+
+    public function me(Request $request)
+    {
+        return response()->json([
+            'user' => [
+                'id' => $request->user()->id,
+                'name' => $request->user()->name,
+                'email' => $request->user()->email,
+                'role' => $request->user()->role,
+            ],
+        ]);
+    }
     public function login(Request $request)
     {
         // Validate request
