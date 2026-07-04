@@ -76,6 +76,10 @@ class TicketController extends Controller
             'assigned_department' => 'sometimes|nullable|string|max:255',
         ]);
 
+        if ($request->user()->role === 'it') {
+            $validated = array_intersect_key($validated, array_flip(['status']));
+        }
+
         if (
             $request->user()->role === 'management' &&
             array_key_exists('assigned_department', $validated) &&

@@ -18,6 +18,7 @@ export default function TicketDetailScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const { user } = useAuth();
 	const isManager = user?.role === "management";
+	const isIt = user?.role === "it";
 	const [ticket, setTicket] = useState<any | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
@@ -58,9 +59,71 @@ export default function TicketDetailScreen() {
 		}
 	};
 
+	const updateStatus = async (
+		status: string,
+		successMessage?: string
+	) => {
+		if (!ticket) {
+			return false;
+		}
+
+		try {
+			setSaving(true);
+			const response = await updateTicket(ticket.id, {
+				status,
+			});
+
+			setTicket(response.ticket ?? ticket);
+			if (successMessage) {
+				Alert.alert("Success", successMessage);
+			}
+
+			return true;
+		} catch (error) {
+			Alert.alert("Error", "Unable to update the ticket status.");
+			return false;
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const closeTicket = async () => {
+		await updateStatus("Closed", "Ticket closed.");
+	};
+
+	const reassignToIT = async () => {
+		if (!ticket) {
+			return;
+		}
+
+		try {
+			setSaving(true);
+			const response = await updateTicket(ticket.id, {
+				assigned_department: "IT Department",
+				status: "Assigned",
+			});
+
+			setTicket(response.ticket ?? ticket);
+			Alert.alert("Success", "Ticket sent back to IT Department.");
+		} catch (error) {
+			Alert.alert("Error", "Unable to reassign the ticket.");
+		} finally {
+			setSaving(false);
+		}
+	};
+
 	const isAssigned =
 		ticket?.status === "Assigned" ||
 		Boolean(ticket?.assigned_department);
+	const isInProgress = ticket?.status === "In Progress";
+	const isResolved = ticket?.status === "Resolved";
+	const isClosed = ticket?.status === "Closed";
+	const showAssignedBadge = isAssigned && !isResolved && !isClosed;
+	const managerActionLabel = isResolved
+		? "Reassign to IT Department"
+		: "Assign to IT Department";
+	const managerActionHandler = isResolved ? reassignToIT : assignToIT;
+	const showManagerAction = !isClosed && (!isAssigned || isResolved);
 
 	if (loading) {
 		return (
@@ -90,24 +153,86 @@ export default function TicketDetailScreen() {
 						{ticket?.assigned_department ?? "Not assigned"}
 					</Text>
 
+					{isClosed ? (
+						<View style={styles.closedBadge}>
+							<Text style={styles.closedBadgeText}>
+								Closed
+							</Text>
+						</View>
+					) : null}
+
 					{isManager ? (
-						isAssigned ? (
-							<View style={styles.assignedBadge}>
-								<Text style={styles.assignedBadgeText}>
-									Assigned to IT Department
-								</Text>
-							</View>
-						) : (
-							<Pressable
-								style={styles.button}
-								onPress={assignToIT}
-								disabled={saving}
-							>
-								<Text style={styles.buttonText}>
-									{saving ? "Assigning..." : "Assign to IT Department"}
-								</Text>
-							</Pressable>
-						)
+						<>
+							{showAssignedBadge ? (
+								<View style={styles.assignedBadge}>
+									<Text style={styles.assignedBadgeText}>
+										Assigned to IT Department
+									</Text>
+								</View>
+							) : null}
+
+							{showManagerAction ? (
+								<Pressable
+									style={styles.button}
+									onPress={managerActionHandler}
+									disabled={saving}
+								>
+									<Text style={styles.buttonText}>
+										{saving ? "Saving..." : managerActionLabel}
+									</Text>
+								</Pressable>
+							) : null}
+
+							{isResolved && !isClosed ? (
+								<>
+									<Pressable
+										style={styles.secondaryButton}
+										onPress={closeTicket}
+										disabled={saving}
+									>
+										<Text style={styles.secondaryButtonText}>
+											Close Ticket
+										</Text>
+									</Pressable>
+								</>
+							) : null}
+						</>
+					) : null}
+
+					{isIt ? (
+						<>
+							{!isClosed && isInProgress ? (
+								<View style={styles.inProgressBadge}>
+									<Text style={styles.inProgressBadgeText}>
+										In Progress
+									</Text>
+								</View>
+							) : null}
+
+							{!isClosed && !isResolved && !isInProgress ? (
+								<Pressable
+									style={styles.button}
+									onPress={() => updateStatus("In Progress")}
+									disabled={saving}
+								>
+									<Text style={styles.buttonText}>
+										Mark In Progress
+									</Text>
+								</Pressable>
+							) : null}
+
+							{!isClosed && ticket?.status === "In Progress" ? (
+								<Pressable
+									style={styles.secondaryButton}
+									onPress={() => updateStatus("Resolved", "Ticket marked as resolved.")}
+									disabled={saving}
+								>
+									<Text style={styles.secondaryButtonText}>
+										Mark Resolved
+									</Text>
+								</Pressable>
+							) : null}
+						</>
 					) : null}
 				</View>
 			</ScrollView>
@@ -167,6 +292,18 @@ const styles = StyleSheet.create({
 		fontSize: 15,
 		fontWeight: "700",
 	},
+	secondaryButton: {
+		marginTop: 12,
+		backgroundColor: "#E5E7EB",
+		paddingVertical: 14,
+		borderRadius: 12,
+		alignItems: "center",
+	},
+	secondaryButtonText: {
+		color: "#111827",
+		fontSize: 15,
+		fontWeight: "700",
+	},
 	assignedBadge: {
 		marginTop: 8,
 		backgroundColor: "#DBEAFE",
@@ -176,6 +313,30 @@ const styles = StyleSheet.create({
 	},
 	assignedBadgeText: {
 		color: "#1D4ED8",
+		fontSize: 15,
+		fontWeight: "700",
+	},
+	inProgressBadge: {
+		marginTop: 8,
+		backgroundColor: "#DCFCE7",
+		paddingVertical: 14,
+		borderRadius: 12,
+		alignItems: "center",
+	},
+	inProgressBadgeText: {
+		color: "#15803D",
+		fontSize: 15,
+		fontWeight: "700",
+	},
+	closedBadge: {
+		marginTop: 8,
+		backgroundColor: "#E5E7EB",
+		paddingVertical: 14,
+		borderRadius: 12,
+		alignItems: "center",
+	},
+	closedBadgeText: {
+		color: "#374151",
 		fontSize: 15,
 		fontWeight: "700",
 	},
