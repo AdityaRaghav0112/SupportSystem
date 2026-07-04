@@ -1,47 +1,64 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { router } from "expo-router";
 import {
-  View,
+  Alert,
+  SafeAreaView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
+  View,
 } from "react-native";
-import { useAuth } from "../context/AuthContext";
-import {router} from "expo-router";
 
-export default function LoginScreen() {
+import { useAuth } from "../context/AuthContext";
+
+export default function SignupScreen() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { registerUser } = useAuth();
 
-  const { loginUser } = useAuth();
-
-  const handleLogin = async () => {
+  const handleSignup = async () => {
     try {
-      await loginUser(email, password);
+      setLoading(true);
+
+      await registerUser(name, email, password, confirmPassword);
 
       router.replace("/dashboard");
     } catch (error: any) {
-      console.log(error);
+      const message =
+        error?.response?.data?.message ??
+        "Unable to create account. Please check the form and try again.";
+      Alert.alert("Signup failed", message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Payspot Support</Text>
+        <Text style={styles.title}>Create account</Text>
         <Text style={styles.subtitle}>
-          Sign in to continue to the Support Ticket System
+          New signups are created as regular users by default.
         </Text>
-
-        <TouchableOpacity onPress={() => router.push("/signup")}> 
-          <Text style={styles.signupLink}>New here? Create an account</Text>
-        </TouchableOpacity>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>Name</Text>
+            <TextInput
+              placeholder="Enter your name"
+              placeholderTextColor="#9CA3AF"
+              value={name}
+              onChangeText={setName}
+              style={styles.input}
+            />
+          </View>
 
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email</Text>
             <TextInput
               placeholder="Enter your email"
               placeholderTextColor="#9CA3AF"
@@ -55,9 +72,8 @@ export default function LoginScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
-
             <TextInput
-              placeholder="Enter your password"
+              placeholder="Create a password"
               placeholderTextColor="#9CA3AF"
               secureTextEntry
               value={password}
@@ -66,20 +82,33 @@ export default function LoginScreen() {
             />
           </View>
 
-          <TouchableOpacity style={styles.forgotContainer}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Confirm Password</Text>
+            <TextInput
+              placeholder="Confirm your password"
+              placeholderTextColor="#9CA3AF"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              style={styles.input}
+            />
+          </View>
 
           <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
+            style={styles.signupButton}
+            onPress={handleSignup}
+            disabled={loading}
           >
-            <Text style={styles.loginButtonText}>Login</Text>
+            <Text style={styles.signupButtonText}>
+              {loading ? "Creating..." : "Sign Up"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.replace("/")}> 
+            <Text style={styles.loginLink}>Already have an account? Login</Text>
           </TouchableOpacity>
         </View>
       </View>
-
-      <Text style={styles.footer}>Version 1.0.0</Text>
     </SafeAreaView>
   );
 }
@@ -88,48 +117,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F7FB",
-    justifyContent: "space-between",
   },
-
   content: {
     paddingHorizontal: 24,
-    marginTop: 80,
+    paddingTop: 80,
   },
-
   title: {
     fontSize: 32,
     fontWeight: "700",
     color: "#1E3A8A",
     marginBottom: 10,
   },
-
   subtitle: {
     fontSize: 16,
     color: "#6B7280",
     lineHeight: 22,
     marginBottom: 40,
   },
-
-  signupLink: {
-    color: "#2563EB",
-    fontWeight: "600",
-    marginBottom: 18,
-  },
-
   form: {
     gap: 18,
   },
-
   inputContainer: {
     gap: 8,
   },
-
   label: {
     fontSize: 14,
     fontWeight: "600",
     color: "#374151",
   },
-
   input: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
@@ -139,34 +154,22 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     fontSize: 16,
   },
-
-  forgotContainer: {
-    alignItems: "flex-end",
-  },
-
-  forgotText: {
-    color: "#2563EB",
-    fontWeight: "600",
-  },
-
-  loginButton: {
+  signupButton: {
     marginTop: 10,
     backgroundColor: "#2563EB",
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
   },
-
-  loginButtonText: {
+  signupButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
   },
-
-  footer: {
+  loginLink: {
     textAlign: "center",
-    marginBottom: 24,
-    color: "#9CA3AF",
-    fontSize: 13,
+    color: "#2563EB",
+    fontWeight: "600",
+    marginTop: 8,
   },
 });

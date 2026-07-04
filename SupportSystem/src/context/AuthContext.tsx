@@ -5,7 +5,7 @@ import React, {
   useEffect,
 } from "react";
 
-import { login } from "../api/auth";
+import { login, register } from "../api/auth";
 import api, { getToken, removeToken, setToken } from "../api/api";
 import { User } from "../types/auth";
 
@@ -15,6 +15,12 @@ interface AuthContextType {
   isAuthenticated: boolean;
 
   loginUser: (email: string, password: string) => Promise<User>;
+  registerUser: (
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string
+  ) => Promise<User>;
   logout: () => Promise<void>;
 }
 
@@ -72,6 +78,30 @@ export function AuthProvider({
     return response.user;
   }
 
+  async function registerUser(
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string
+  ) {
+    const response = await register({
+      name,
+      email,
+      password,
+      password_confirmation: passwordConfirmation,
+    });
+
+    await setToken(response.token);
+
+    api.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${response.token}`;
+
+    setUser(response.user);
+
+    return response.user;
+  }
+
   async function logout() {
     await removeToken();
 
@@ -87,6 +117,7 @@ export function AuthProvider({
         loading,
         isAuthenticated: !!user,
         loginUser,
+        registerUser,
         logout,
       }}
     >
