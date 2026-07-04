@@ -4,10 +4,9 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import * as SecureStore from "expo-secure-store";
 
 import { login } from "../api/auth";
-import api from "../api/api";
+import api, { getToken, removeToken, setToken } from "../api/api";
 import { User } from "../types/auth";
 
 interface AuthContextType {
@@ -35,7 +34,7 @@ export function AuthProvider({
 
   async function initializeAuth() {
     try {
-      const token = await SecureStore.getItemAsync("token");
+      const token = await getToken();
 
       if (!token) {
         setLoading(false);
@@ -50,7 +49,7 @@ export function AuthProvider({
 
       setUser(data.user);
     } catch (error) {
-      await SecureStore.deleteItemAsync("token");
+      await removeToken();
     } finally {
       setLoading(false);
     }
@@ -62,10 +61,7 @@ export function AuthProvider({
       password,
     });
 
-    await SecureStore.setItemAsync(
-      "token",
-      response.token
-    );
+    await setToken(response.token);
 
     api.defaults.headers.common[
       "Authorization"
@@ -75,7 +71,7 @@ export function AuthProvider({
   }
 
   async function logout() {
-    await SecureStore.deleteItemAsync("token");
+    await removeToken();
 
     delete api.defaults.headers.common.Authorization;
 

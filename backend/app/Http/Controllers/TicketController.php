@@ -23,14 +23,12 @@ class TicketController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'priority' => 'nullable|in:Low,Medium,High',
         ]);
 
         $ticket = Ticket::create([
             'user_id' => $request->user()->id,
             'title' => $validated['title'],
             'description' => $validated['description'],
-            'priority' => $validated['priority'],
             'status' => 'Pending',
         ]);
 

@@ -33,6 +33,7 @@ export default function CreateTicketScreen() {
       });
 
       Alert.alert("Success", "Ticket created successfully!");
+      console.log("Ticket created successfully!");
 
       router.replace("/dashboard");
     } catch (error: any) {

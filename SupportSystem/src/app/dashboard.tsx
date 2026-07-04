@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import {
+  ActivityIndicator,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -9,29 +11,33 @@ import {
 } from "react-native";
 
 import TicketCard from "../components/TicketCard";
-
-const tickets = [
-  {
-    id: 1,
-    title: "Laptop not booting",
-    priority: "High",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    title: "VPN not connecting",
-    priority: "Medium",
-    status: "In Progress",
-  },
-  {
-    id: 3,
-    title: "Printer issue",
-    priority: "Low",
-    status: "Resolved",
-  },
-];
+import { getTickets } from "../api/ticket";
 
 export default function Dashboard() {
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTickets();
+  }, []);
+
+  const loadTickets = async () => {
+    try {
+      const data = await getTickets();
+      console.log("Tickets:", data);
+      const latestTickets = [...data].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() -
+          new Date(a.created_at).getTime()
+      );
+      setTickets(latestTickets);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -51,7 +57,7 @@ export default function Dashboard() {
           style={styles.button}
           onPress={() => router.push("/ticket/create")}
         >
-          <Text style={styles.buttonText} onPress={() => router.push("/ticket/create")}>
+          <Text style={styles.buttonText}>
             + Raise New Ticket
           </Text>
         </Pressable>
@@ -70,15 +76,25 @@ export default function Dashboard() {
           </Pressable>
         </View>
 
-        {tickets.map((ticket) => (
-          <TicketCard
-            key={ticket.id}
-            {...ticket}
-            onPress={() =>
-              router.push(`/ticket/${ticket.id}`)
-            }
-          />
-        ))}
+        {loading ? (
+          <ActivityIndicator size="large" />
+        ) : tickets.length === 0 ? (
+          <Text style={styles.emptyText}>
+            No tickets found.
+          </Text>
+        ) : (
+          tickets.slice(0, 3).map((ticket: any) => (
+            <TicketCard
+              key={ticket.id}
+              title={ticket.title}
+              description={ticket.description}
+              status={ticket.status}
+              onPress={() =>
+                router.push(`/ticket/${ticket.id}`)
+              }
+            />
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -137,5 +153,12 @@ const styles = StyleSheet.create({
   viewAll: {
     color: "#2563EB",
     fontWeight: "600",
+  },
+
+  emptyText: {
+    textAlign: "center",
+    color: "#6B7280",
+    marginTop: 20,
+    fontSize: 16,
   },
 });

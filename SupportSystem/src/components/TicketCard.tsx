@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {
   title: string;
-  priority: string;
+  description?: string;
   status: string;
   onPress?: () => void;
 };
@@ -17,7 +17,7 @@ const statusColors: Record<string, string> = {
 
 export default function TicketCard({
   title,
-  priority,
+  description,
   status,
   onPress,
 }: Props) {
@@ -25,8 +25,12 @@ export default function TicketCard({
     <Pressable style={styles.card} onPress={onPress}>
       <Text style={styles.title}>{title}</Text>
 
+      {description ? (
+        <Text style={styles.description}>{description}</Text>
+      ) : null}
+
       <View style={styles.row}>
-        <Text style={styles.priority}>{priority} Priority</Text>
+        {/* <Text style={styles.priority}>{priority} Priority</Text> */}
 
         <View
           style={[
@@ -57,6 +61,11 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600",
     color: "#111827",
+  },
+
+  description: {
+    marginTop: 8,
+    color: "#6B7280",
   },
 
   row: {
