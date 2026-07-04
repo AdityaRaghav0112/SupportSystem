@@ -14,7 +14,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
 
-  loginUser: (email: string, password: string) => Promise<void>;
+  loginUser: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
 }
 
@@ -68,6 +68,8 @@ export function AuthProvider({
     ] = `Bearer ${response.token}`;
 
     setUser(response.user);
+
+    return response.user;
   }
 
   async function logout() {

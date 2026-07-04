@@ -11,10 +11,13 @@ import {
 } from "react-native";
 
 import { getTickets } from "../../api/ticket";
+import { useAuth } from "../../context/AuthContext";
 
 export default function TicketListScreen() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const isManager = user?.role === "management";
 
   useEffect(() => {
     loadTickets();
@@ -45,7 +48,9 @@ export default function TicketListScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>All Tickets</Text>
         <Text style={styles.subtitle}>
-          Browse your support requests.
+          {isManager
+            ? "Browse every support request across the system."
+            : "Browse your support requests."}
         </Text>
 
         {tickets.length === 0 ? (

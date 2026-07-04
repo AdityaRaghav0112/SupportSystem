@@ -30,6 +30,8 @@ return new class extends Migration
                 'Closed'
             ])->default('Pending');
 
+            $table->string('assigned_department')->nullable();
+
             $table->timestamps();
         });
     }

@@ -20,7 +20,6 @@ export default function LoginScreen() {
     try {
       await loginUser(email, password);
 
-      console.log("Login Success");
       router.replace("/dashboard");
     } catch (error: any) {
       console.log(error);
